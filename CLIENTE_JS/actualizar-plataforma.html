@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Actualizar Plataforma</title>
+    <link rel="stylesheet" href="css/styles.css" />
+</head>
+
+<body>
+    <header>
+        <h1>Actualizar Plataforma</h1>
+    </header>
+    <main>
+        <div class="page-actions">
+            <a class="page-link" href="index.html">Volver al menú</a>
+        </div>
+
+
+        <div class="row">
+            <input id="idBuscar" type="number" placeholder="ID de la plataforma" />
+            <button id="btnBuscar">Buscar para editar</button>
+        </div>
+
+        <form id="formActualizar">
+            <label for="nombre">Nombre</label>
+            <input id="nombre" type="text" placeholder="Nombre" required />
+
+            <label for="url">URL</label>
+            <input id="url" type="url" placeholder="https://ejemplo.com" required />
+
+            <label for="costoSuscripcion">Costo Suscripción</label>
+            <input id="costoSuscripcion" type="number" step="0.01" placeholder="Costo" required />
+
+            <label class="checkbox-row">
+                <input id="soporte24Horas" type="checkbox" />
+                <span>Soporte 24 Horas</span>
+            </label>
+
+
+            <label for="fechaFundacion">Fecha Fundación</label>
+            <input id="fechaFundacion" type="datetime-local" />
+
+            <button type="submit">Actualizar Datos</button>
+        </form>
+
+        <p id="mensaje" class="message"></p>
+    </main>
+
+    <script src="js/api.js"></script>
+    <script>
+        // 1. BUSCAR Y RELLENAR EL FORMULARIO
+        document.getElementById("btnBuscar").addEventListener("click", async () => {
+            const id = document.getElementById("idBuscar").value;
+            const mensaje = document.getElementById("mensaje");
+
+            if (!id) return;
+
+            try {
+                const p = await buscarPlataformaPorId(id);
+
+                document.getElementById("nombre").value = p.nombre;
+                document.getElementById("url").value = p.url;
+                document.getElementById("costoSuscripcion").value = p.costoSuscripcion;
+                // Manejar NUMBER(1) como booleano para el checkbox
+                document.getElementById("soporte24Horas").checked = (p.soporte24Horas === 1 || p.soporte24Horas === true);
+
+                if (p.fechaFundacion) {
+                    // Formatear para el input datetime-local (YYYY-MM-DDTHH:MM)
+                    document.getElementById("fechaFundacion").value =
+                        p.fechaFundacion.replace(" ", "T").slice(0, 16);
+                }
+
+                mensaje.textContent = "Datos cargados. Puede editar.";
+                mensaje.style.color = "blue";
+            } catch (error) {
+                mensaje.textContent = "Error: " + error.message;
+                mensaje.style.color = "red";
+            }
+        });
+
+        // 2. ENVIAR ACTUALIZACIÓN
+        document.getElementById("formActualizar").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const mensaje = document.getElementById("mensaje");
+            const id = document.getElementById("idBuscar").value;
+
+            try {
+                const fechaInput = document.getElementById("fechaFundacion").value;
+
+                const plataforma = {
+                    id: parseInt(id, 10),
+                    nombre: document.getElementById("nombre").value,
+                    url: document.getElementById("url").value,
+                    costoSuscripcion: parseFloat(document.getElementById("costoSuscripcion").value),
+                    soporte24Horas: document.getElementById("soporte24Horas").checked ? 1 : 0,
+                    fechaFundacion: fechaInput ? fechaInput.replace("T", " ") + ":00" : null
+                };
+
+                await actualizarPlataforma(id, plataforma);
+                mensaje.textContent = "Plataforma actualizada correctamente";
+                mensaje.style.color = "green";
+            } catch (error) {
+                mensaje.textContent = "Error al actualizar: " + error.message;
+                mensaje.style.color = "red";
+            }
+        });
+    </script>
+</body>
+
+</html>

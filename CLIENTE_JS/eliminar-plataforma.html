@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Eliminar Plataforma</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+
+<body>
+  <header>
+    <h1>Eliminar Plataforma</h1>
+  </header>
+  <main>
+    <div class="page-actions">
+      <a class="page-link" href="index.html">Volver al menú</a>
+    </div>
+
+
+    <div class="row">
+      <input id="idBuscar" type="number" placeholder="ID de la plataforma" />
+      <button id="btnBuscar">Buscar</button>
+    </div>
+
+    <div id="resultado" class="card"></div>
+
+    <button id="btnEliminar">
+      Confirmar Eliminación
+    </button>
+
+    <p id="mensaje" class="message"></p>
+  </main>
+
+  <script src="js/api.js"></script>
+  <script>
+    let plataformaActual = null;
+
+    function renderPlataforma(p) {
+      const soporte = (p.soporte24Horas === 1 || p.soporte24Horas === true) ? "Sí" : "No";
+
+      document.getElementById("resultado").innerHTML = `
+        <h3 style="color: #d9534f;">Plataforma a eliminar</h3>
+        <p><strong>ID:</strong> ${p.id}</p>
+        <p><strong>Nombre:</strong> ${p.nombre}</p>
+        <p><strong>URL:</strong> ${p.url}</p>
+        <p><strong>Costo:</strong> $${p.costoSuscripcion}</p>
+        <p><strong>Soporte 24h:</strong> ${soporte}</p>
+      `;
+      document.getElementById("btnEliminar").style.display = "block";
+    }
+
+    document.getElementById("btnBuscar").addEventListener("click", async () => {
+      const id = document.getElementById("idBuscar").value;
+      const mensaje = document.getElementById("mensaje");
+      mensaje.textContent = "";
+
+      try {
+        plataformaActual = await buscarPlataformaPorId(id);
+        renderPlataforma(plataformaActual);
+      } catch (error) {
+        mensaje.textContent = error.message;
+        document.getElementById("resultado").innerHTML = "";
+        document.getElementById("btnEliminar").style.display = "none";
+      }
+    });
+
+    document.getElementById("btnEliminar").addEventListener("click", async () => {
+      const mensaje = document.getElementById("mensaje");
+
+      try {
+        if (!plataformaActual) {
+          mensaje.textContent = "Primero debes buscar una plataforma";
+          return;
+        }
+
+        if (confirm(`¿Estás seguro de que deseas eliminar la plataforma "${plataformaActual.nombre}"?`)) {
+          await eliminarPlataforma(plataformaActual.id);
+          mensaje.textContent = "Plataforma eliminada correctamente";
+          mensaje.style.color = "green";
+
+          // Limpiar vista
+          document.getElementById("resultado").innerHTML = "";
+          document.getElementById("btnEliminar").style.display = "none";
+          document.getElementById("idBuscar").value = "";
+          plataformaActual = null;
+        }
+      } catch (error) {
+        mensaje.textContent = "Error: " + error.message;
+        mensaje.style.color = "black";
+      }
+    });
+  </script>
+</body>
+
+</html>
